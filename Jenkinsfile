@@ -2,9 +2,10 @@ pipeline {
     agent any
 
     stages {
+
         stage('Checkout') {
             steps {
-                echo 'Source code checkout completed'
+                echo 'Code checkout completed'
             }
         }
 
@@ -14,17 +15,13 @@ pipeline {
                     docker run --rm \
                     -v "$WORKSPACE:/workspace" \
                     -w /workspace/project4 \
-                    python:3.11-slim sh -c '
-                        python -m venv .venv-ci
-                        .venv-ci/bin/pip install --upgrade pip
-                        .venv-ci/bin/pip install -r requirements.txt
-                        .venv-ci/bin/pip install pip-audit
-                        .venv-ci/bin/pip-audit -r requirements.txt \
-                            -f json -o dependency-report.json || true
-                    '
+                    python:3.11-slim sh -c "
+                        pip install -r requirements.txt
+                        pip install pip-audit
+                        pip-audit -r requirements.txt \
+                        -f json -o dependency-report.json || true
+                    "
                 '''
-                archiveArtifacts artifacts: 'project4/dependency-report.json',
-                                 allowEmptyArchive: true
             }
         }
 
@@ -34,8 +31,10 @@ pipeline {
                     docker run --rm \
                     -v "$WORKSPACE:/workspace" \
                     -w /workspace/project4 \
-                    python:3.11-slim \
-                    .venv-ci/bin/python manage.py check
+                    python:3.11-slim sh -c "
+                        pip install -r requirements.txt
+                        python manage.py check
+                    "
                 '''
             }
         }
@@ -53,15 +52,16 @@ pipeline {
 
         stage('Pipeline Success') {
             steps {
-                echo 'Project4 pipeline stages completed'
+                echo 'All pipeline stages completed'
             }
         }
     }
 
     post {
         success {
-            echo 'Project4 CI Pipeline completed successfully!'
+            echo 'Project4 CI Pipeline SUCCESS!'
         }
+
         failure {
             echo 'Pipeline failed. Check Console Output.'
         }
