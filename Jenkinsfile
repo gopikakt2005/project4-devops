@@ -10,20 +10,30 @@ pipeline {
 
         stage('Dependency Scan') {
             steps {
-                sh 'python3 -m pip install -r requirements.txt'
-                sh 'python3 -m pip_audit -r requirements.txt'
+                sh '''
+                    python3 -m venv .venv-ci
+                    .venv-ci/bin/pip install --upgrade pip
+                    .venv-ci/bin/pip install -r requirements.txt
+                    .venv-ci/bin/pip install pip-audit
+                    .venv-ci/bin/pip-audit -r requirements.txt
+                '''
             }
         }
 
         stage('Django Check') {
             steps {
-                sh 'python3 manage.py check'
+                sh '''
+                    .venv-ci/bin/python manage.py check
+                '''
             }
         }
 
         stage('SAST Scan') {
             steps {
-                sh 'semgrep scan --config auto .'
+                sh '''
+                    .venv-ci/bin/pip install semgrep
+                    .venv-ci/bin/semgrep scan --config auto .
+                '''
             }
         }
 
