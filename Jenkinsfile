@@ -89,6 +89,7 @@ pipeline {
 
                         REPO_PATH="${GITOPS_REPO_URL#https://}"
 
+                        rm -rf gitops
                         git clone --branch "$GITOPS_BRANCH" \
                         "https://${GIT_USER}:${GIT_TOKEN}@${REPO_PATH}" gitops
 
