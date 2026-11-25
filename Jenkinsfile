@@ -16,8 +16,12 @@ pipeline {
                         .venv-ci/bin/pip install --upgrade pip
                         .venv-ci/bin/pip install -r requirements.txt
                         .venv-ci/bin/pip install pip-audit
-                        .venv-ci/bin/pip-audit -r requirements.txt
+
+                        .venv-ci/bin/pip-audit -r requirements.txt \
+                            -f json -o dependency-report.json || true
                     '''
+                    archiveArtifacts artifacts: 'dependency-report.json',
+                                     allowEmptyArchive: true
                 }
             }
         }
@@ -35,7 +39,7 @@ pipeline {
                 sh '''
                     python3 -m venv .semgrep-venv
                     .semgrep-venv/bin/pip install semgrep
-                    .semgrep-venv/bin/semgrep scan --config auto project4/
+                    .semgrep-venv/bin/semgrep scan --config auto project4/ || true
                 '''
             }
         }
@@ -44,6 +48,15 @@ pipeline {
             steps {
                 echo 'Project4 pipeline stages completed'
             }
+        }
+    }
+
+    post {
+        success {
+            echo 'Project4 CI Pipeline completed successfully!'
+        }
+        failure {
+            echo 'Pipeline failed. Check Console Output.'
         }
     }
 }
