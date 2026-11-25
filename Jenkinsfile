@@ -8,7 +8,7 @@ pipeline {
 
         SONAR_PROJECT_KEY = 'project4'
 
-        GITOPS_REPO_URL = 'https://github.com/OWNER/GITOPS-REPO.git'
+        GITOPS_REPO_URL = 'https://github.com/gopikakt2005/project4-gitops.git'
         GITOPS_BRANCH = 'main'
         GITOPS_MANIFEST = 'k8s/deployment.yaml'
     }
