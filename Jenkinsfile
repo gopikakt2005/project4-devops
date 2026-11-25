@@ -4,7 +4,7 @@ pipeline {
     environment {
         AWS_REGION = 'us-east-1'
         AWS_ACCOUNT_ID = '265183279684'
-        ECR_REPOSITORY = '265183279684.dkr.ecr.us-east-1.amazonaws.com/project4-devops'
+        ECR_REPOSITORY = 'project4-devops'
 
         SONAR_PROJECT_KEY = 'project4'
 
