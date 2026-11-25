@@ -24,8 +24,7 @@ pipeline {
                         sh """
                             ${scannerHome}/bin/sonar-scanner \
                             -Dsonar.projectKey=${SONAR_PROJECT_KEY} \
-                            -Dsonar.sources=project4 \
-                            -Dsonar.exclusions=**/migrations/**,**/.venv/**
+                            -Dsonar.sources=project4
                         """
                     }
                 }
@@ -35,8 +34,7 @@ pipeline {
         stage('Build') {
             steps {
                 script {
-                    env.IMAGE_URI =
-                        "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPOSITORY}"
+                    env.IMAGE_URI = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPOSITORY}"
 
                     sh '''
                         docker build \
@@ -51,13 +49,8 @@ pipeline {
         stage('Test') {
             steps {
                 sh '''
-                    docker run --rm \
-                    "$IMAGE_URI:$BUILD_NUMBER" \
-                    python manage.py check
-
-                    docker run --rm \
-                    "$IMAGE_URI:$BUILD_NUMBER" \
-                    python manage.py test
+                    docker run --rm "$IMAGE_URI:$BUILD_NUMBER" python manage.py check
+                    docker run --rm "$IMAGE_URI:$BUILD_NUMBER" python manage.py test
                 '''
             }
         }
@@ -65,11 +58,8 @@ pipeline {
         stage('Push to ECR') {
             steps {
                 sh '''
-                    aws ecr get-login-password \
-                    --region "$AWS_REGION" | \
-                    docker login \
-                    --username AWS \
-                    --password-stdin \
+                    aws ecr get-login-password --region "$AWS_REGION" |
+                    docker login --username AWS --password-stdin \
                     "$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com"
 
                     docker push "$IMAGE_URI:$BUILD_NUMBER"
@@ -91,39 +81,13 @@ pipeline {
 
                         REPO_PATH="${GITOPS_REPO_URL#https://}"
 
-                        git clone \
-                        --branch "$GITOPS_BRANCH" \
-                        "https://${GIT_USER}:${GIT_TOKEN}@${REPO_PATH}" \
-                        gitops
+                        git clone --branch "$GITOPS_BRANCH" \
+                        "https://${GIT_USER}:${GIT_TOKEN}@${REPO_PATH}" gitops
 
                         cd gitops
 
-                        export NEW_IMAGE="$IMAGE_URI:$BUILD_NUMBER"
-
-                        python3 - "$GITOPS_MANIFEST" <<'PY'
-import os
-import re
-import sys
-
-path = sys.argv[1]
-image = os.environ["NEW_IMAGE"]
-
-with open(path, "r") as f:
-    content = f.read()
-
-updated, count = re.subn(
-    r'(?m)^(\s*image:\s*).+$',
-    lambda match: match.group(1) + image,
-    content,
-    count=1
-)
-
-if count != 1:
-    raise SystemExit("Could not find image field in deployment manifest")
-
-with open(path, "w") as f:
-    f.write(updated)
-PY
+                        sed -i "0,/image:/s|image:.*|image: $IMAGE_URI:$BUILD_NUMBER|" \
+                        "$GITOPS_MANIFEST"
 
                         git config user.name "Jenkins"
                         git config user.email "jenkins@example.com"
@@ -134,14 +98,14 @@ PY
                     '''
                 }
 
-                echo 'GitOps manifest updated. ArgoCD will sync the changes to EKS.'
+                echo 'GitOps repository updated. ArgoCD will sync EKS.'
             }
         }
     }
 
     post {
         success {
-            echo 'Project4 CI/CD Pipeline completed successfully!'
+            echo 'Project4 CI/CD Pipeline SUCCESS!'
         }
 
         failure {
