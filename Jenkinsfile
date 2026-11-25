@@ -16,20 +16,28 @@ pipeline {
     stages {
 
         stage('SonarQube Analysis') {
-            steps {
-                script {
-                    def scannerHome = tool 'sonarqube'
+    steps {
+        script {
+            def scannerHome = tool 'sonarqube'
 
-                    withSonarQubeEnv('sonarscanner') {
-                        sh """
-                            ${scannerHome}/bin/sonar-scanner \
-                            -Dsonar.projectKey=${SONAR_PROJECT_KEY} \
-                            -Dsonar.sources=project4
-                        """
-                    }
+            withCredentials([
+                string(
+                    credentialsId: 'sonarqube-token',
+                    variable: 'SONAR_TOKEN'
+                )
+            ]) {
+                withSonarQubeEnv('sonarscanner') {
+                    sh '''
+                        $SONAR_SCANNER_HOME/bin/sonar-scanner \
+                        -Dsonar.projectKey=project4 \
+                        -Dsonar.sources=project4 \
+                        -Dsonar.token="$SONAR_TOKEN"
+                    '''
                 }
             }
         }
+    }
+}
 
         stage('Build') {
             steps {
