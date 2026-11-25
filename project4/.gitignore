@@ -1,0 +1,10 @@
+venv/
+__pycache__/
+*.pyc
+*.swp
+*.save
+.env
+zap.yaml
+sast-report.json
+dependency-report.json
+dast-report.html
