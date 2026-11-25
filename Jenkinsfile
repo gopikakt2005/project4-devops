@@ -27,12 +27,12 @@ pipeline {
                 )
             ]) {
                 withSonarQubeEnv('sonarscanner') {
-                    sh '''
-                        $SONAR_SCANNER_HOME/bin/sonar-scanner \
+                    sh """
+                        ${scannerHome}/bin/sonar-scanner \
                         -Dsonar.projectKey=project4 \
                         -Dsonar.sources=project4 \
-                        -Dsonar.token="$SONAR_TOKEN"
-                    '''
+                        -Dsonar.token=\$SONAR_TOKEN
+                    """
                 }
             }
         }
